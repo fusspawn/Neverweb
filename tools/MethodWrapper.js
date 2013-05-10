@@ -1,4 +1,7 @@
 var IgnoredFunctions = ["toString", "offsetState", "onAfterSetStencil"];
+
+
+
 var MethodCache = {};
 var old_log = console.log;
 var log_key = false;
@@ -13,32 +16,36 @@ function __log(message) {
     
     console.log(message);
 }
-
-
-
-
 function is_a_function(possible_func) {
     return (client[possible_func] 
         && {}.toString.call(client[possible_func]) === '[object Function]');
 }
 
-function is_ignored(possible_func) {
-    for(var i in IgnoredFunctions)
-        if(possible_func == IgnoredFunctions[i])
-            return true;
-            
-    return false;
+function is_a_object(item) { 
+    return item && {}.toString.call(possible_func) === '[object Object]');
 }
-
+function is_ignored(possible_func) {
+   for(var i in IgnoredFunctions) {
+        if(IgnoredFunctions[i] == possible_func) {
+            __log("Found Ignored: " + possible_func);
+            return true;
+        }
+   }
+   
+   return false;
+}
 function wrap_if_function(possible_func) {
     if(is_a_function(possible_func) && !is_ignored(possible_func)) {
         MethodCache[possible_func] = client[possible_func];
         client[possible_func] = function() {
-            __log("wrapped_call: " + possible_func + " with args: ");
-            
-            
-            for(var i in arguments)
-                __log("arg: " + i  + " is " +  arguments[i]);
+            __log("wrapped_call: " + possible_func);
+            for(var i in arguments) {
+                if(!is_a_object(arguments[i])) {
+                    __log("arg: " + i  + " is " + arguments[i]);
+                } else {
+                    __log("arg: " + i + " is " + JSON.stringify(arguments[i]));
+                }
+            }
                 
             var retval =  MethodCache[possible_func].apply(client, arguments);
             if(retval) 
